@@ -80,6 +80,13 @@
 </head>
 <body>
   <h1>Juego de Recetas de Sushi 🍣</h1>
+  <div style="text-align: center; margin-bottom: 20px;">
+    <select id="languageSelect">
+      <option value="es">🇪🇸 Español</option>
+      <option value="ru">🇷🇺 Русский</option>
+      <option value="uz">🇺🇿 O‘zbekcha</option>
+    </select>
+  </div>
   <div class="container">
     <h2>Arrastra los ingredientes correctos para el: <span id="rollName"></span></h2>
     <div class="ingredients" id="ingredients"></div>
@@ -155,11 +162,11 @@
 
     let indice = 0;
     let modoFacil = false;
-
+    let idiomaActual = "es"; // Por defecto Español
 
     function cargarReceta() {
       const current = recetas[indice];
-      document.getElementById("rollName").textContent = current.nombre;
+      document.getElementById("rollName").textContent = traducirNombre(current.nombre);
     
       const allOptions = [...current.ingredientes];
       while (allOptions.length < current.ingredientes.length + 3) {
@@ -177,7 +184,7 @@
       allOptions.forEach(item => {
         const div = document.createElement("div");
         div.className = "ingredient";
-        div.textContent = item;
+        div.textContent = traducirIngrediente(item);
     
         if (isMobile) {
           div.addEventListener("click", () => seleccionarIngrediente(item, div));
@@ -278,6 +285,44 @@
       document.getElementById("message").textContent = "";
     });
     
+    function traducirIngrediente(ingrediente) {
+      const traducciones = {
+        "Alga nori": { ru: "Нори", uz: "Nori" },
+        "Arroz japonés": { ru: "Японский рис", uz: "Yapon guruch" },
+        "Queso crema": { ru: "Сливочный сыр", uz: "Krem pishloq" },
+        "Tomate": { ru: "Томат", uz: "Pomidor" },
+        "Lechuga iceberg": { ru: "Салат айсберг", uz: "Aysberg salat" },
+        "Tiras de pollo crujiente": { ru: "Хрустящая куриная полоска", uz: "Qarsildoq tovuq bo'lagi" },
+        "Polvo de pan frito": { ru: "Панировочные сухари", uz: "Non bo'lagi kukuni" },
+        "Salsa César": { ru: "Соус Цезарь", uz: "Sezar sousi" },
+        "Camarón en tempura": { ru: "Темпура креветка", uz: "Tempura qisqichbaqasi" },
+        "Pepino": { ru: "Огурец", uz: "Bodring" },
+        "Salsa de chile dulce": { ru: "Соус сладкий чили", uz: "Shirin chili sousi" },
+        // ... puedes seguir agregando más traducciones si quieres
+      };
+      
+      if (traducciones[ingrediente] && traducciones[ingrediente][idiomaActual]) {
+        return traducciones[ingrediente][idiomaActual];
+      }
+      return ingrediente; // Si no hay traducción, dejar igual
+    }
+    
+    function traducirNombre(nombre) {
+      if (idiomaActual === "ru") {
+        return nombre; // Ya está en ruso en tu base
+      }
+      if (idiomaActual === "uz") {
+        return nombre; // Aquí podrías traducir más adelante si quieres
+      }
+      return nombre; // Español por defecto
+    }
+    
+    document.getElementById("languageSelect").addEventListener("change", (e) => {
+      idiomaActual = e.target.value;
+      cargarReceta();
+    });
+    
+
     cargarReceta();
     </script>
 </body>
