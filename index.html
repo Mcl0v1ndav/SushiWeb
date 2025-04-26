@@ -75,15 +75,6 @@
       .botones button:hover {
         background-color: #ffa500;
       }
-      @media (max-width: 600px) {
-        .ingredient {
-          padding: 8px 10px;
-          font-size: 14px;
-        }
-        h1 {
-          font-size: 22px;
-        }
-      }
       
   </style>
 </head>
@@ -102,7 +93,6 @@
   </div>
 
   <script>
-    const isMobile = window.matchMedia("(max-width: 600px)").matches;
     const recetas = [
   { nombre: "Ролл \"Хрустящий Цезарь\"", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Tomate", "Lechuga iceberg", "Tiras de pollo crujiente", "Polvo de pan frito", "Salsa César"] },
   { nombre: "Ролл с креветкой — темпура и сладкий чили", ingredientes: ["Alga nori", "Arroz japonés", "Polvo de pan frito", "Queso crema", "Camarón en tempura", "Pepino", "Salsa de chile dulce", "Salsa unagi"] },
@@ -166,6 +156,7 @@
     function cargarReceta() {
       const current = recetas[indice];
       document.getElementById("rollName").textContent = current.nombre;
+
       const allOptions = [...current.ingredientes];
       while (allOptions.length < current.ingredientes.length + 3) {
         const extra = opcionesExtra[Math.floor(Math.random() * opcionesExtra.length)];
@@ -182,49 +173,55 @@
       allOptions.forEach(item => {
         const div = document.createElement("div");
         div.className = "ingredient";
-        div.draggable = true;
         div.textContent = item;
-        div.addEventListener("dragstart", e => {
-          div.classList.add("dragging");
-          e.dataTransfer.setData("text/plain", item);
-        });
-        div.addEventListener("dragend", () => {
-          div.classList.remove("dragging");
-        });
+
+        if (isMobile) {
+          div.addEventListener("click", () => {
+            const dropped = document.createElement("div");
+            dropped.className = "ingredient";
+            dropped.textContent = item;
+            dropped.addEventListener("click", () => dropped.remove());
+            dropzone.appendChild(dropped);
+          });
+        } else {
+          div.draggable = true;
+          div.addEventListener("dragstart", e => {
+            div.classList.add("dragging");
+            e.dataTransfer.setData("text/plain", item);
+          });
+          div.addEventListener("dragend", () => {
+            div.classList.remove("dragging");
+          });
+        }
         ingredientsDiv.appendChild(div);
       });
     }
 
-    document.getElementById("dropzone").addEventListener("dragover", e => e.preventDefault());
-    document.getElementById("dropzone").addEventListener("drop", e => {
+    if (!isMobile) {
+      document.getElementById("dropzone").addEventListener("dragover", e => e.preventDefault());
+      document.getElementById("dropzone").addEventListener("drop", e => {
         e.preventDefault();
         const data = e.dataTransfer.getData("text/plain");
         const dropped = document.createElement("div");
         dropped.className = "ingredient";
         dropped.textContent = data;
-      
-        // Opción de quitar el ingrediente al hacer clic
-        dropped.addEventListener("click", () => {
-          dropped.remove();
-        });
-      
+        dropped.addEventListener("click", () => dropped.remove());
         document.getElementById("dropzone").appendChild(dropped);
       });
-      
+    }
 
-      document.getElementById("check").addEventListener("click", () => {
-        const seleccionados = Array.from(document.getElementById("dropzone").children).map(el => el.textContent);
-        const current = recetas[indice];
-        const correcto = JSON.stringify(seleccionados) === JSON.stringify(current.ingredientes);
-      
-        const mensaje = document.getElementById("message");
-        if (correcto) {
-          mensaje.textContent = "✅ ¡Correcto!";
-        } else {
-          mensaje.innerHTML = `❌ Intenta de nuevo.<br><strong>Ingredientes correctos:</strong><br>${current.ingredientes.join(", ")}`;
-        }
-      });
-      
+    document.getElementById("check").addEventListener("click", () => {
+      const seleccionados = Array.from(document.getElementById("dropzone").children).map(el => el.textContent);
+      const current = recetas[indice];
+      const correcto = JSON.stringify(seleccionados) === JSON.stringify(current.ingredientes);
+
+      const mensaje = document.getElementById("message");
+      if (correcto) {
+        mensaje.textContent = "✅ ¡Correcto!";
+      } else {
+        mensaje.innerHTML = `❌ Intenta de nuevo.<br><strong>Ingredientes correctos:</strong><br>${current.ingredientes.join(", ")}`;
+      }
+    });
 
     document.getElementById("next").addEventListener("click", () => {
       indice = (indice + 1) % recetas.length;
@@ -232,10 +229,10 @@
     });
 
     document.getElementById("retry").addEventListener("click", () => {
-        const dropzone = document.getElementById("dropzone");
-        dropzone.innerHTML = "";
-        document.getElementById("message").textContent = "";
-      });      
+      const dropzone = document.getElementById("dropzone");
+      dropzone.innerHTML = "";
+      document.getElementById("message").textContent = "";
+    });
 
     cargarReceta();
   </script>
