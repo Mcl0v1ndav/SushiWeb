@@ -251,8 +251,8 @@
     document.getElementById("toggleDifficulty").addEventListener("click", () => {
       modoFacil = !modoFacil;
       const boton = document.getElementById("toggleDifficulty");
-      boton.textContent = modoFacil ? "🧠 Modo Difícil" : "🧠 Modo Fácil";
-    });
+      boton.textContent = modoFacil ? "🧠 Fácil" : "🧠 Difícil";
+    });    
     
     document.getElementById("check").addEventListener("click", () => {
       const seleccionados = Array.from(document.getElementById("dropzone").children).map(el => el.textContent);
