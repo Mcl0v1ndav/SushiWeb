@@ -88,6 +88,7 @@
         <button id="check">✅ Verificar</button>
         <button id="retry">🔄 Reintentar</button>
         <button id="next">➡️ Siguiente</button>
+        <button id="toggleDifficulty">🧠 Cambiar Dificultad</button>
     </div>
     <p id="message"></p>   
   </div>
@@ -153,6 +154,7 @@
     ];
 
     let indice = 0;
+    let modoFacil = false;
 
     function cargarReceta() {
       const current = recetas[indice];
@@ -211,6 +213,15 @@
         dropped.className = "ingredient";
         dropped.textContent = item;
     
+        if (modoFacil) {
+          const current = recetas[indice];
+          if (current.ingredientes.includes(item)) {
+            dropped.style.backgroundColor = "lightgreen"; // Correcto: verde
+          } else {
+            dropped.style.backgroundColor = "lightcoral"; // Incorrecto: rojo
+          }
+        }
+    
         dropped.addEventListener("click", () => {
           dropped.remove();
     
@@ -232,6 +243,13 @@
         dropzone.appendChild(dropped);
       });
     }
+    
+
+    document.getElementById("toggleDifficulty").addEventListener("click", () => {
+      modoFacil = !modoFacil;
+      const boton = document.getElementById("toggleDifficulty");
+      boton.textContent = modoFacil ? "🧠 Modo Difícil" : "🧠 Modo Fácil";
+    });
     
     document.getElementById("check").addEventListener("click", () => {
       const seleccionados = Array.from(document.getElementById("dropzone").children).map(el => el.textContent);
