@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juego de Sushi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fdf5e6;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .ingredients {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    .ingredient {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #fff;
+      padding: 10px 15px;
+      margin: 10px;
+      cursor: grab;
+    }
+    .dropzone {
+      border: 2px dashed #aaa;
+      border-radius: 10px;
+      min-height: 60px;
+      width: 80%;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: start;
+    }
+    .ingredient.dragging {
+      opacity: 0.5;
+    }
+    #check {
+      margin-top: 20px;
+    }
+    #next {
+      margin-top: 10px;
+    }
+    .botones {
+        /*display: flex;*/
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      .botones button {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        background-color: #ffb347;
+        color: #fff;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      
+      .botones button:hover {
+        background-color: #ffa500;
+      }
+      
+  </style>
+</head>
+<body>
+  <h1>Juego de Recetas de Sushi 🍣</h1>
+  <div class="container">
+    <h2>Arrastra los ingredientes correctos para el: <span id="rollName"></span></h2>
+    <div class="ingredients" id="ingredients"></div>
+    <div class="dropzone" id="dropzone"></div>
+    <div class="botones">
+        <button id="check">✅ Verificar</button>
+        <button id="retry">🔄 Reintentar</button>
+        <button id="next">➡️ Siguiente</button>
+    </div>
+    <p id="message"></p>   
+  </div>
+
+  <script>
+    const recetas = [
+  { nombre: "Ролл \"Хрустящий Цезарь\"", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Tomate", "Lechuga iceberg", "Tiras de pollo crujiente", "Polvo de pan frito", "Salsa César"] },
+  { nombre: "Ролл с креветкой — темпура и сладкий чили", ingredientes: ["Alga nori", "Arroz japonés", "Polvo de pan frito", "Queso crema", "Camarón en tempura", "Pepino", "Salsa de chile dulce", "Salsa unagi"] },
+  { nombre: "Ролл \"Филадельфия с креветкой\"", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema (interior)", "Pepino japonés", "Camarones tigre cocidos", "Queso crema (exterior)", "Salsa unagi con tom yam dil", "Ajonjolí blanco"] },
+  { nombre: "Ролл с беконом", ingredientes: ["Alga nori", "Arroz japonés", "Cebolla caramelizada", "Queso crema", "Pepino japonés", "Aguacate", "Beicon frito", "Salsa unagi"] },
+  { nombre: "Калифорния", ingredientes: ["Alga nori", "Arroz japonés", "Cangrejo con mayonesa", "Pepino japonés", "Aguacate", "Hueva masago naranja"] },
+  { nombre: "Со снежным крабом", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Cangrejo con mayonesa", "Pepino japonés", "Hueva masago roja"] },
+  { nombre: "Ролл \"Нежная креветка\"", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Pepino japonés", "Camarones tigre cocidos", "Hueva masago naranja", "Polvo de pan frito"] },
+  { nombre: "Филадельфия с угрем", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Pepino japonés", "Anguila", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Карамельная Филадельфия", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Aguacate", "Salmón", "Azúcar", "Sal marina"] },
+  { nombre: "Филадельфия", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Pepino japonés", "Salmón"] },
+  { nombre: "Обжаренный ролл \"Курица в чеддере\"", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Tiras de pollo crujiente", "Pepino japonés", "Queso cheddar", "Salsa de nuez", "Salsa unagi", "Cebolla caramelizada"] },
+  { nombre: "Ролл \"Айсберг\" с куриными стрипсами", ingredientes: ["Alga nori", "Arroz japonés", "Cebolla caramelizada", "Queso crema", "Pepino japonés", "Tiras de pollo crujiente", "Pimiento rojo", "Lechuga iceberg", "Salsa unagi"] },
+  { nombre: "Овощной", ingredientes: ["Alga nori", "Arroz japonés", "Pepino japonés", "Pimiento rojo", "Aguacate", "Cebolla verde"] },
+  { nombre: "Запеченный ролл Исиномакки", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Cangrejo con mayonesa", "Salsa rosada", "Salsa unagi", "Ajonjolí blanco", "Ajonjolí blanco (tapa)"] },
+  { nombre: "Запеченный ролл с тигровой креветкой", ingredientes: ["Alga nori", "Arroz japonés", "Cangrejo con mayonesa", "Queso crema", "Hueva masago naranja", "Salsa rosada", "Camarones tigre cocidos", "Salsa unagi"] },
+  { nombre: "Запеченный ролл с лососем", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Pepino japonés", "Salmón", "Salsa rosada", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Запеченный ролл с курицей", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Ajonjolí blanco", "Queso crema (exterior)", "Filete de pollo en BBQ", "Cebolla caramelizada"] },
+  { nombre: "Запеченный ролл с угрем", ingredientes: ["Alga nori", "Arroz japonés", "Tortilla", "Pepino japonés", "Anguila", "Salsa de queso", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Запеченный ролл \"сырный цыплёнок\"", ingredientes: ["Alga nori", "Arroz japonés", "Queso cheddar", "Tiras de pollo crujiente", "Polvo de pan frito", "Salsa de queso", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Запечённый ролл “Угорь и лосось”", ingredientes: ["Alga nori", "Arroz japonés", "Cangrejo con mayonesa", "Tortilla", "Salsa rosada", "Salmón", "Anguila", "Salsa de nuez", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Запечённый ролл “Лосось и креветка”", ingredientes: ["Alga nori", "Arroz japonés", "Polvo de pan frito", "Queso crema", "Salmón", "Camarón con salsa de queso", "Salsa de nuez", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Острый ролл “Краб с шичими”", ingredientes: ["Alga nori", "Arroz japonés", "Cangrejo con mayonesa (interior)", "Pepino japonés", "Especias shichimi", "Cangrejo con mayonesa (tapa)", "Salsa picante japonesa", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Запечённый ролл с острым лососем", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Pepino japonés", "Salmón", "Hueva masago naranja", "Salsa picante japonesa"] },
+  { nombre: "Запечённый ролл “Малибу”", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Anguila", "Aguacate", "Salsa rosada", "Ajonjolí blanco"] },
+  { nombre: "Запечённый ролл с моцареллой и креветкой", ingredientes: ["Alga nori", "Arroz japonés", "Polvo de pan frito", "Queso crema", "Pepino japonés", "Camarón con salsa de queso", "Queso mozzarella"] },
+  { nombre: "Запечённый ролл с креветкой в сырном соусе", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Tortilla", "Camarón con salsa de queso", "Salsa unagi", "Ajonjolí blanco", "Salsa de sriracha"] },
+  { nombre: "Запечённый шичими-ролл с креветкой", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Pepino japonés", "Tortilla", "Especias shichimi", "Camarón con salsa de queso", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Горячий краб", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Pepino japonés", "Tortilla", "Hueva masago naranja", "Cangrejo con mayonesa", "Queso mozzarella"] },
+  { nombre: "Запечённый ролл с куриными стрипсами и беконом", ingredientes: ["Alga nori", "Arroz japonés", "Cebolla caramelizada", "Tiras de pollo crujiente", "Beicon frito", "Salsa rosada", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Запечённая Филадельфия", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Pepino japonés", "Salmón", "Salsa unagi"] },
+  { nombre: "Запечённый ролл “Шиитаке”", ingredientes: ["Alga nori", "Arroz japonés", "Tortilla", "Pepino japonés", "Cebolla verde", "Setas en salsa rosada", "Salsa unagi", "Ajonjolí blanco"] },
+  { nombre: "Запечённые суши с креветкой", ingredientes: ["Arroz japonés", "Alga nori", "Camarones tigre cocidos", "Salsa rosada"] },
+  { nombre: "Запечённые суши с тунцом", ingredientes: ["Arroz japonés", "Alga nori", "Atún", "Salsa rosada"] },
+  { nombre: "Запечённые суши с лососем", ingredientes: ["Arroz japonés", "Alga nori", "Salmón", "Salsa rosada"] },
+  { nombre: "Острые суши с лососем", ingredientes: ["Arroz japonés", "Alga nori", "Salmón", "Salsa picante japonesa"] },
+  { nombre: "Острые суши с креветкой", ingredientes: ["Arroz japonés", "Alga nori", "Camarones tigre cocidos", "Salsa picante japonesa"] },
+  { nombre: "Острые суши с тунцом", ingredientes: ["Arroz japonés", "Alga nori", "Atún", "Salsa picante japonesa"] },
+  { nombre: "Суши с чука", ingredientes: ["Arroz japonés", "Alga nori", "Chuka (ensalada de algas)", "Salsa de nuez"] },
+  { nombre: "Суши с тунцом и авокадо", ingredientes: ["Arroz japonés", "Alga nori", "Atún en salsa picante", "Aguacate"] },
+  { nombre: "Маки с огурцом", ingredientes: ["Alga nori", "Arroz japonés", "Pepino japonés"] },
+  { nombre: "Маки с лососем", ingredientes: ["Alga nori", "Arroz japonés", "Salmón"] },
+  { nombre: "Маки с тунцом", ingredientes: ["Alga nori", "Arroz japonés", "Atún"] },
+  { nombre: "Маки с авокадо", ingredientes: ["Alga nori", "Arroz japonés", "Aguacate"] },
+  { nombre: "Темпурный ролл с креветкой", ingredientes: ["Alga nori", "Arroz japonés", "Hueva masago roja", "Queso crema", "Camarones tigre cocidos", "Aguacate", "Rebozado para tempura", "Pan rallado"] },
+  { nombre: "Темпурный ролл с курицей", ingredientes: ["Alga nori", "Arroz japonés", "Queso cheddar", "Tiras de pollo crujiente", "Beicon frito", "Tomate", "Rebozado para tempura", "Pan rallado"] },
+  { nombre: "Онигири с креветкой", ingredientes: ["Arroz japonés", "Hoja de alga en empaque", "Camarón en salsa picante"] },
+  { nombre: "Онигири с курицей терияки", ingredientes: ["Arroz japonés", "Hoja de alga en empaque", "Pollo frito en salsa teriyaki"] },
+  { nombre: "Онигири с лососем", ingredientes: ["Arroz japonés", "Hoja de alga en empaque", "Salmón en salsa unagi"] }
+];
+
+    const opcionesExtra = [
+      "Aguacate", "Cangrejo con mayonesa", "Tomate", "Tiras de pollo crujiente",
+      "Hueva masago naranja", "Lechuga iceberg", "Salsa rosada", "Salsa unagi",
+      "Polvo de pan frito", "Queso cheddar", "Camarón en tempura", "Tortilla",
+      "Salsa de queso", "Pimiento rojo", "Setas en salsa rosada"
+    ];
+
+    let indice = 0;
+
+    function cargarReceta() {
+      const current = recetas[indice];
+      document.getElementById("rollName").textContent = current.nombre;
+      const allOptions = [...current.ingredientes];
+      while (allOptions.length < current.ingredientes.length + 3) {
+        const extra = opcionesExtra[Math.floor(Math.random() * opcionesExtra.length)];
+        if (!allOptions.includes(extra)) allOptions.push(extra);
+      }
+      allOptions.sort(() => Math.random() - 0.5);
+
+      const ingredientsDiv = document.getElementById("ingredients");
+      const dropzone = document.getElementById("dropzone");
+      ingredientsDiv.innerHTML = "";
+      dropzone.innerHTML = "";
+      document.getElementById("message").textContent = "";
+
+      allOptions.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "ingredient";
+        div.draggable = true;
+        div.textContent = item;
+        div.addEventListener("dragstart", e => {
+          div.classList.add("dragging");
+          e.dataTransfer.setData("text/plain", item);
+        });
+        div.addEventListener("dragend", () => {
+          div.classList.remove("dragging");
+        });
+        ingredientsDiv.appendChild(div);
+      });
+    }
+
+    document.getElementById("dropzone").addEventListener("dragover", e => e.preventDefault());
+    document.getElementById("dropzone").addEventListener("drop", e => {
+        e.preventDefault();
+        const data = e.dataTransfer.getData("text/plain");
+        const dropped = document.createElement("div");
+        dropped.className = "ingredient";
+        dropped.textContent = data;
+      
+        // Opción de quitar el ingrediente al hacer clic
+        dropped.addEventListener("click", () => {
+          dropped.remove();
+        });
+      
+        document.getElementById("dropzone").appendChild(dropped);
+      });
+      
+
+      document.getElementById("check").addEventListener("click", () => {
+        const seleccionados = Array.from(document.getElementById("dropzone").children).map(el => el.textContent);
+        const current = recetas[indice];
+        const correcto = JSON.stringify(seleccionados) === JSON.stringify(current.ingredientes);
+      
+        const mensaje = document.getElementById("message");
+        if (correcto) {
+          mensaje.textContent = "✅ ¡Correcto!";
+        } else {
+          mensaje.innerHTML = `❌ Intenta de nuevo.<br><strong>Ingredientes correctos:</strong><br>${current.ingredientes.join(", ")}`;
+        }
+      });
+      
+
+    document.getElementById("next").addEventListener("click", () => {
+      indice = (indice + 1) % recetas.length;
+      cargarReceta();
+    });
+
+    document.getElementById("retry").addEventListener("click", () => {
+        const dropzone = document.getElementById("dropzone");
+        dropzone.innerHTML = "";
+        document.getElementById("message").textContent = "";
+      });      
+
+    cargarReceta();
+  </script>
+</body>
+</html>
