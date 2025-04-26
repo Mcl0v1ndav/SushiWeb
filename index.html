@@ -75,6 +75,15 @@
       .botones button:hover {
         background-color: #ffa500;
       }
+      @media (max-width: 600px) {
+        .ingredient {
+          padding: 8px 10px;
+          font-size: 14px;
+        }
+        h1 {
+          font-size: 22px;
+        }
+      }
       
   </style>
 </head>
@@ -93,6 +102,7 @@
   </div>
 
   <script>
+    const isMobile = window.matchMedia("(max-width: 600px)").matches;
     const recetas = [
   { nombre: "Ролл \"Хрустящий Цезарь\"", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Tomate", "Lechuga iceberg", "Tiras de pollo crujiente", "Polvo de pan frito", "Salsa César"] },
   { nombre: "Ролл с креветкой — темпура и сладкий чили", ingredientes: ["Alga nori", "Arroz japonés", "Polvo de pan frito", "Queso crema", "Camarón en tempura", "Pepino", "Salsa de chile dulce", "Salsa unagi"] },
