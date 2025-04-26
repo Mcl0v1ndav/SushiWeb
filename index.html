@@ -154,128 +154,130 @@
     ];
 
     let indice = 0;
-let modoFacil = false;
+    let modoFacil = false;
 
-function cargarReceta() {
-  const current = recetas[indice];
-  document.getElementById("rollName").textContent = current.nombre;
-
-  const allOptions = [...current.ingredientes];
-  while (allOptions.length < current.ingredientes.length + 3) {
-    const extra = opcionesExtra[Math.floor(Math.random() * opcionesExtra.length)];
-    if (!allOptions.includes(extra)) allOptions.push(extra);
-  }
-  allOptions.sort(() => Math.random() - 0.5);
-
-  const ingredientsDiv = document.getElementById("ingredients");
-  const dropzone = document.getElementById("dropzone");
-  ingredientsDiv.innerHTML = "";
-  dropzone.innerHTML = "";
-  document.getElementById("message").textContent = "";
-
-  allOptions.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "ingredient";
-    div.textContent = item;
-
-    if (isMobile) {
-      div.addEventListener("click", () => {
-        div.remove();
-
+    function cargarReceta() {
+      const current = recetas[indice];
+      document.getElementById("rollName").textContent = current.nombre;
+    
+      const allOptions = [...current.ingredientes];
+      while (allOptions.length < current.ingredientes.length + 3) {
+        const extra = opcionesExtra[Math.floor(Math.random() * opcionesExtra.length)];
+        if (!allOptions.includes(extra)) allOptions.push(extra);
+      }
+      allOptions.sort(() => Math.random() - 0.5);
+    
+      const ingredientsDiv = document.getElementById("ingredients");
+      const dropzone = document.getElementById("dropzone");
+      ingredientsDiv.innerHTML = "";
+      dropzone.innerHTML = "";
+      document.getElementById("message").textContent = "";
+    
+      allOptions.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "ingredient";
+        div.textContent = item;
+    
+        if (isMobile) {
+          div.addEventListener("click", () => seleccionarIngrediente(item, div));
+        } else {
+          div.draggable = true;
+          div.addEventListener("dragstart", e => {
+            div.classList.add("dragging");
+            e.dataTransfer.setData("text/plain", item);
+          });
+          div.addEventListener("dragend", () => {
+            div.classList.remove("dragging");
+          });
+        }
+    
+        ingredientsDiv.appendChild(div);
+      });
+    }
+    
+    function seleccionarIngrediente(item, originalDiv) {
+      originalDiv.remove();
+      const dropped = document.createElement("div");
+      dropped.className = "ingredient";
+      dropped.textContent = item;
+    
+      if (modoFacil) {
+        const current = recetas[indice];
+        dropped.style.backgroundColor = current.ingredientes.includes(item) ? "lightgreen" : "lightcoral";
+      }
+    
+      dropped.addEventListener("click", () => {
+        dropped.remove();
+        const newIngredient = document.createElement("div");
+        newIngredient.className = "ingredient";
+        newIngredient.textContent = item;
+        newIngredient.style.backgroundColor = ""; // <-- limpiar color
+        newIngredient.addEventListener("click", () => seleccionarIngrediente(item, newIngredient));
+        document.getElementById("ingredients").appendChild(newIngredient);
+      });
+    
+      document.getElementById("dropzone").appendChild(dropped);
+    }
+    
+    if (!isMobile) {
+      const dropzone = document.getElementById("dropzone");
+      dropzone.addEventListener("dragover", e => e.preventDefault());
+      dropzone.addEventListener("drop", e => {
+        e.preventDefault();
+        const data = e.dataTransfer.getData("text/plain");
+    
+        const ingredientsDiv = document.getElementById("ingredients");
+        const ingredientOptions = Array.from(ingredientsDiv.children);
+        const ingredientDiv = ingredientOptions.find(div => div.textContent === data);
+    
+        if (ingredientDiv) {
+          ingredientDiv.remove();
+        }
+    
         const dropped = document.createElement("div");
         dropped.className = "ingredient";
-        dropped.textContent = item;
-
-        if (modoFacil) {
-          const current = recetas[indice];
-          if (current.ingredientes.includes(item)) {
-            dropped.style.backgroundColor = "lightgreen";
-          } else {
-            dropped.style.backgroundColor = "lightcoral";
-          }
-        }
-
+        dropped.textContent = data;
+    
         dropped.addEventListener("click", () => {
           dropped.remove();
-          ingredientsDiv.appendChild(div);
+          ingredientsDiv.appendChild(ingredientDiv);
         });
-
+    
         dropzone.appendChild(dropped);
       });
-    } else {
-      div.draggable = true;
-      div.addEventListener("dragstart", e => {
-        div.classList.add("dragging");
-        e.dataTransfer.setData("text/plain", item);
-      });
-      div.addEventListener("dragend", () => {
-        div.classList.remove("dragging");
-      });
     }
-
-    ingredientsDiv.appendChild(div);
-  });
-}
-
-if (!isMobile) {
-  const dropzone = document.getElementById("dropzone");
-  dropzone.addEventListener("dragover", e => e.preventDefault());
-  dropzone.addEventListener("drop", e => {
-    e.preventDefault();
-    const data = e.dataTransfer.getData("text/plain");
-
-    const ingredientsDiv = document.getElementById("ingredients");
-    const ingredientOptions = Array.from(ingredientsDiv.children);
-    const ingredientDiv = ingredientOptions.find(div => div.textContent === data);
-
-    if (ingredientDiv) {
-      ingredientDiv.remove();
-    }
-
-    const dropped = document.createElement("div");
-    dropped.className = "ingredient";
-    dropped.textContent = data;
-
-    dropped.addEventListener("click", () => {
-      dropped.remove();
-      ingredientsDiv.appendChild(ingredientDiv);
+    
+    document.getElementById("toggleDifficulty").addEventListener("click", () => {
+      modoFacil = !modoFacil;
+      const boton = document.getElementById("toggleDifficulty");
+      boton.textContent = modoFacil ? "🧠 Modo Difícil" : "🧠 Modo Fácil";
     });
-
-    dropzone.appendChild(dropped);
-  });
-}
-
-document.getElementById("toggleDifficulty").addEventListener("click", () => {
-  modoFacil = !modoFacil;
-  const boton = document.getElementById("toggleDifficulty");
-  boton.textContent = modoFacil ? "🧠 Modo Difícil" : "🧠 Modo Fácil";
-});
-
-document.getElementById("check").addEventListener("click", () => {
-  const seleccionados = Array.from(document.getElementById("dropzone").children).map(el => el.textContent);
-  const current = recetas[indice];
-  const correcto = JSON.stringify(seleccionados) === JSON.stringify(current.ingredientes);
-
-  const mensaje = document.getElementById("message");
-  if (correcto) {
-    mensaje.textContent = "✅ ¡Correcto!";
-  } else {
-    mensaje.innerHTML = `❌ Intenta de nuevo.<br><strong>Ingredientes correctos:</strong><br>${current.ingredientes.join(", ")}`;
-  }
-});
-
-document.getElementById("next").addEventListener("click", () => {
-  indice = (indice + 1) % recetas.length;
-  cargarReceta();
-});
-
-document.getElementById("retry").addEventListener("click", () => {
-  const dropzone = document.getElementById("dropzone");
-  dropzone.innerHTML = "";
-  document.getElementById("message").textContent = "";
-});
-
-cargarReceta();
-</script>
+    
+    document.getElementById("check").addEventListener("click", () => {
+      const seleccionados = Array.from(document.getElementById("dropzone").children).map(el => el.textContent);
+      const current = recetas[indice];
+      const correcto = JSON.stringify(seleccionados) === JSON.stringify(current.ingredientes);
+    
+      const mensaje = document.getElementById("message");
+      if (correcto) {
+        mensaje.textContent = "✅ ¡Correcto!";
+      } else {
+        mensaje.innerHTML = `❌ Intenta de nuevo.<br><strong>Ingredientes correctos:</strong><br>${current.ingredientes.join(", ")}`;
+      }
+    });
+    
+    document.getElementById("next").addEventListener("click", () => {
+      indice = (indice + 1) % recetas.length;
+      cargarReceta();
+    });
+    
+    document.getElementById("retry").addEventListener("click", () => {
+      const dropzone = document.getElementById("dropzone");
+      dropzone.innerHTML = "";
+      document.getElementById("message").textContent = "";
+    });
+    
+    cargarReceta();
+    </script>
 </body>
 </html>
