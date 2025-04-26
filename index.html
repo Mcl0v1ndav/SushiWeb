@@ -203,48 +203,36 @@
       });
     }
     
-    if (!isMobile) {
-      document.getElementById("dropzone").addEventListener("dragover", e => e.preventDefault());
-    
-      document.getElementById("dropzone").addEventListener("drop", e => {
-        e.preventDefault();
-        const data = e.dataTransfer.getData("text/plain");
-    
-        const ingredientsDiv = document.getElementById("ingredients");
-        const ingredientOptions = Array.from(ingredientsDiv.children);
-        const ingredientDiv = ingredientOptions.find(div => div.textContent === data);
-    
-        if (ingredientDiv) {
-          ingredientDiv.remove();
-        }
+    if (isMobile) {
+      div.addEventListener("click", () => {
+        div.remove();
     
         const dropped = document.createElement("div");
         dropped.className = "ingredient";
-        dropped.textContent = data;
+        dropped.textContent = item;
     
         dropped.addEventListener("click", () => {
           dropped.remove();
     
           const newIngredient = document.createElement("div");
           newIngredient.className = "ingredient";
-          newIngredient.textContent = data;
-          newIngredient.draggable = true;
-          newIngredient.addEventListener("dragstart", e => {
-            newIngredient.classList.add("dragging");
-            e.dataTransfer.setData("text/plain", data);
-          });
-          newIngredient.addEventListener("dragend", () => {
-            newIngredient.classList.remove("dragging");
+          newIngredient.textContent = item;
+    
+          newIngredient.addEventListener("click", () => {
+            newIngredient.remove();
+            const droppedAgain = document.createElement("div");
+            droppedAgain.className = "ingredient";
+            droppedAgain.textContent = item;
+            dropzone.appendChild(droppedAgain);
           });
     
           ingredientsDiv.appendChild(newIngredient);
         });
     
-        document.getElementById("dropzone").appendChild(dropped);
+        dropzone.appendChild(dropped);
       });
     }
     
-
     document.getElementById("check").addEventListener("click", () => {
       const seleccionados = Array.from(document.getElementById("dropzone").children).map(el => el.textContent);
       const current = recetas[indice];
