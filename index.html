@@ -93,6 +93,7 @@
   </div>
 
   <script>
+    const isMobile = window.matchMedia("(max-width: 600px)").matches;
     const recetas = [
   { nombre: "Ролл \"Хрустящий Цезарь\"", ingredientes: ["Alga nori", "Arroz japonés", "Queso crema", "Tomate", "Lechuga iceberg", "Tiras de pollo crujiente", "Polvo de pan frito", "Salsa César"] },
   { nombre: "Ролл с креветкой — темпура и сладкий чили", ingredientes: ["Alga nori", "Arroz japonés", "Polvo de pan frito", "Queso crema", "Camarón en tempura", "Pepino", "Salsa de chile dulce", "Salsa unagi"] },
@@ -154,33 +155,23 @@
     let indice = 0;
 
     function cargarReceta() {
-      const current = recetas[indice];
-      document.getElementById("rollName").textContent = current.nombre;
-
-      const allOptions = [...current.ingredientes];
-      while (allOptions.length < current.ingredientes.length + 3) {
-        const extra = opcionesExtra[Math.floor(Math.random() * opcionesExtra.length)];
-        if (!allOptions.includes(extra)) allOptions.push(extra);
-      }
-      allOptions.sort(() => Math.random() - 0.5);
-
-      const ingredientsDiv = document.getElementById("ingredients");
-      const dropzone = document.getElementById("dropzone");
-      ingredientsDiv.innerHTML = "";
-      dropzone.innerHTML = "";
-      document.getElementById("message").textContent = "";
-
       allOptions.forEach(item => {
         const div = document.createElement("div");
         div.className = "ingredient";
         div.textContent = item;
-
+      
         if (isMobile) {
           div.addEventListener("click", () => {
+            div.remove(); // Quita el ingrediente de la lista de opciones
             const dropped = document.createElement("div");
             dropped.className = "ingredient";
             dropped.textContent = item;
-            dropped.addEventListener("click", () => dropped.remove());
+      
+            dropped.addEventListener("click", () => {
+              dropped.remove(); // Quita de dropzone
+              ingredientsDiv.appendChild(div); // Vuelve a agregar al área de opciones
+            });
+      
             dropzone.appendChild(dropped);
           });
         } else {
